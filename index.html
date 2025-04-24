@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>बच्चों का वजन और ऊँचाई चार्ट</title>
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <script>
+    emailjs.init("ZgF61ZDLLTdFbCEdGPdHl");
+  </script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: url('https://i.postimg.cc/QxJ7NhMs/dac3c326-5082-4702-b901-e9d969aa0eee.png') no-repeat center center fixed;
+      background-size: cover;
+      color: #2c3e50;
+      text-align: center;
+    }
+    .container {
+      padding: 30px 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    h1 {
+      margin-bottom: 20px;
+      color: #fff;
+      text-shadow: 1px 1px 5px rgba(0,0,0,0.8);
+    }
+    select, button, input[type="email"] {
+      padding: 12px;
+      font-size: 16px;
+      margin: 10px 5px;
+      border-radius: 8px;
+      border: none;
+      width: 100%;
+      max-width: 250px;
+    }
+    button {
+      background: #3498db;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #2980b9;
+    }
+    .result {
+      background: rgba(255,255,255,0.95);
+      margin: 20px auto;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      max-width: 500px;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
+      color: #fff;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+    }
+    @media screen and (max-width: 480px) {
+      select, button, input[type="email"] {
+        font-size: 15px;
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>बच्चों की ऊँचाई और वजन चार्ट (0-6 वर्ष)</h1>
+
+    <label>लिंग:</label>
+    <select id="gender">
+      <option value="boy">लड़का</option>
+      <option value="girl">लड़की</option>
+    </select>
+
+    <label>वर्ष:</label>
+    <select id="years" style="background:#fff3cd; color:#000;">
+      <option value="0">0</option>
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
+    </select>
+
+    <label>महीने:</label>
+    <select id="months" style="background:#fff3cd; color:#000;">
+      <option value="0">0</option>
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
+      <option value="7">7</option>
+      <option value="8">8</option>
+      <option value="9">9</option>
+      <option value="10">10</option>
+      <option value="11">11</option>
+    </select>
+
+    <label>ईमेल पता:</label>
+    <input type="email" id="emailInput" placeholder="example@email.com" />
+
+    <button onclick="getInfo()">जानकारी दिखाएं</button>
+    <button onclick="startVoice()">🎤 बोलें</button>
+    <button onclick="printInfo()">प्रिंट करें</button>
+    <button onclick="saveInfo()">सेव करें</button>
+    <button onclick="sendEmail()">ईमेल करें</button>
+
+    <div id="result" class="result" style="display: none;"></div>
+  </div>
+
+  <script>
+    const data = {
+      0: { boy: { weight: "2.5 - 4.3 kg", height: "46 - 54 cm" }, girl: { weight: "2.4 - 4.2 kg", height: "45 - 53 cm" } },
+      6: { boy: { weight: "6.4 - 9.7 kg", height: "63 - 70 cm" }, girl: { weight: "5.8 - 9.2 kg", height: "61 - 68 cm" } },
+      12: { boy: { weight: "8.6 - 12.0 kg", height: "71 - 80 cm" }, girl: { weight: "7.9 - 11.5 kg", height: "70 - 78 cm" } },
+      24: { boy: { weight: "10.1 - 14.5 kg", height: "82 - 92 cm" }, girl: { weight: "9.6 - 13.9 kg", height: "80 - 90 cm" } },
+      36: { boy: { weight: "11.5 - 17.2 kg", height: "90 - 100 cm" }, girl: { weight: "11.0 - 16.8 kg", height: "88 - 98 cm" } },
+      48: { boy: { weight: "13.0 - 19.9 kg", height: "96 - 106 cm" }, girl: { weight: "12.2 - 19.6 kg", height: "94 - 104 cm" } },
+      60: { boy: { weight: "14.4 - 22.4 kg", height: "102 - 113 cm" }, girl: { weight: "13.4 - 22.0 kg", height: "100 - 111 cm" } },
+      72: { boy: { weight: "16.0 - 25.0 kg", height: "108 - 118 cm" }, girl: { weight: "15.0 - 24.5 kg", height: "105 - 116 cm" } }
+    };
+
+    let spokenText = "";
+
+    function getInfo() {
+      const gender = document.getElementById("gender").value;
+      const years = parseInt(document.getElementById("years").value);
+      const months = parseInt(document.getElementById("months").value);
+      const totalMonths = years * 12 + months;
+      const closestAge = findClosestAge(totalMonths);
+      const info = data[closestAge];
+      const result = document.getElementById("result");
+
+      if (info && info[gender]) {
+        const text = `
+          आयु: ${years} वर्ष, ${months} महीने<br>
+          ${gender === 'boy' ? 'लड़के' : 'लड़की'} का वजन: ${info[gender].weight}<br>
+          ${gender === 'boy' ? 'लड़के' : 'लड़की'} की ऊँचाई: ${info[gender].height}
+        `;
+        spokenText = text.replace(/<br>/g, " ");
+        result.innerHTML = text;
+        result.style.display = "block";
+        speakHindi(spokenText);
+      } else {
+        result.innerHTML = "जानकारी उपलब्ध नहीं है।";
+        result.style.display = "block";
+      }
+    }
+
+    function findClosestAge(months) {
+      const available = Object.keys(data).map(x => parseInt(x));
+      return available.reduce((prev, curr) => Math.abs(curr - months) < Math.abs(prev - months) ? curr : prev);
+    }
+
+    function speakHindi(text) {
+      const msg = new SpeechSynthesisUtterance();
+      msg.lang = "hi-IN";
+      msg.text = text;
+      window.speechSynthesis.speak(msg);
+    }
+
+    function printInfo() {
+      const content = document.getElementById("result").innerHTML;
+      const printWindow = window.open('', '', 'height=500,width=400');
+      printWindow.document.write('<html><head><title>प्रिंट जानकारी</title></head><body style="background-image:url(https://i.postimg.cc/QxJ7NhMs/dac3c326-5082-4702-b901-e9d969aa0eee.png); background-size:cover;">');
+      printWindow.document.write('<h2 style="color:#000; background:#fff; padding:10px;">बच्चे की जानकारी</h2>');
+      printWindow.document.write('<div style="background:#fff;padding:20px;border-radius:10px;">' + content + '</div>');
+      printWindow.document.write('</body></html>');
+      printWindow.document.close();
+      printWindow.print();
+    }
+
+    function saveInfo() {
+      const blob = new Blob([spokenText], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = "बच्चे_की_जानकारी.txt";
+      a.click();
+    }
+
+    function startVoice() {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = "hi-IN";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.start();
+      recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        parseVoiceInput(transcript);
+      };
+      recognition.onerror = function(event) {
+        alert("वॉयस इनपुट में त्रुटि: " + event.error);
+      };
+    }
+
+    function parseVoiceInput(text) {
+      let gender = text.includes("लड़का") ? "boy" : text.includes("लड़की") ? "girl" : "boy";
+      let years = (text.match(/(\d+) ?(साल|वर्ष)/) || [])[1] || 0;
+      let months = (text.match(/(\d+) ?(महीना|महीने)/) || [])[1] || 0;
+      document.getElementById("gender").value = gender;
+      document.getElementById("years").value = years;
+      document.getElementById("months").value = months;
+      getInfo();
+    }
+
+    function sendEmail() {
+      const email = document.getElementById("emailInput").value.trim();
+      const resultHtml = document.getElementById("result").innerHTML;
+      if (!email || !email.includes("@")) {
+        alert("कृपया मान्य ईमेल पता दर्ज करें।");
+        return;
+      }
+      const templateParams = {
+        to_email: email,
+        message: resultHtml.replace(/<br>/g, '\n').replace(/<[^>]+>/g, '')
+      };
+      emailjs.send('service_2sx626w', 'template_kv9om68', templateParams)
+        .then(function(response) {
+          alert("ईमेल सफलतापूर्वक भेजा गया!");
+        }, function(error) {
+          alert("ईमेल भेजने में त्रुटि: " + error.text);
+        });
+    }
+  </script>
+</body>
+</html>
